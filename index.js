@@ -1,9 +1,7 @@
 const express = require('express');
 const app = express();
-const functions = require('@netlify/functions');
 const port = 8000;
 
-exports.handler = functions.https.createServer(app);
 app.use(express.json());
 
 const mysql = require('mysql2');
