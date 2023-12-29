@@ -4,7 +4,7 @@ const app = express();
 const port = 8000;
 
 app.use(express.json());
-app.use(cors()); 
+app.use(cors());
 
 require('dotenv').config();
 
@@ -108,28 +108,33 @@ app.patch("/customer/:id", async (req, res) => {
 
 app.delete("/customer/:id", async (req, res) => {
     try {
-      const { id } = req.params;
-      const update = await connection
-        .promise()
-        .query(
-          `DELETE FROM  customers where id = ?`,
-          [id]
-        );
-      res.status(200).json({
-        message: "deleted",
-      });
+        const { id } = req.params;
+        const update = await connection
+            .promise()
+            .query(
+                `DELETE FROM  customers where id = ?`,
+                [id]
+            );
+        res.status(200).json({
+            message: "deleted",
+        });
     } catch (err) {
-      res.status(500).json({
-        message: err,
-      });
+        res.status(500).json({
+            message: err,
+        });
     }
-  });
+});
 
 app.get("/results", async (req, res) => {
     try {
-        const data = await connection.promise().query(
-            `SELECT *  from results;`
-        );
+        const { userId } = req.query; 
+
+        let query = `SELECT * FROM results`;
+        if (userId) {
+            query += ` WHERE user_id = ${userId}`;
+        }
+
+        const data = await connection.promise().query(query);
         res.status(202).json({
             results: data[0],
         });
@@ -160,7 +165,7 @@ app.post("/results", async (req, res) => {
 
 app.patch("/result", async (req, res) => {
     try {
-        const { score, user_id, course_id,  } = req.body;
+        const { score, user_id, course_id, } = req.body;
         const update = await connection
             .promise()
             .query(
@@ -179,23 +184,23 @@ app.patch("/result", async (req, res) => {
 
 app.delete("/result", async (req, res) => {
     try {
-      const { course_id, user_id } = req.body;
-      const update = await connection
-        .promise()
-        .query(
-          `DELETE FROM  results where course_id = ? AND user_id = ?`,
-          [course_id, user_id]
-        );
-      res.status(200).json({
-        message: `deleted record with course_id: ${course_id}, USER_ID: ${user_id}`,
-      });
+        const { course_id, user_id } = req.body;
+        const update = await connection
+            .promise()
+            .query(
+                `DELETE FROM  results where course_id = ? AND user_id = ?`,
+                [course_id, user_id]
+            );
+        res.status(200).json({
+            message: `deleted record with course_id: ${course_id}, USER_ID: ${user_id}`,
+        });
     } catch (err) {
-      res.status(500).json({
-        message: err,
-      });
+        res.status(500).json({
+            message: err,
+        });
     }
-  });
+});
 
-app.listen(process.env.PORT || 3000, () => {
+app.listen(process.env.PORT || 8000, () => {
     console.log(`app listening at http://localhost:${port}`);
 });
