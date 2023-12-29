@@ -1,9 +1,11 @@
-# nodejs_crm
+# RESTful API using Node.js Express
 Backend for my React Customer Relationship Manager.
 
 Technologies:
 
-React JavaScript/TypeScript Chart.js Node.js Express SQL
+- Node.js
+- Express
+- SQL
 
 Front End React Code: https://github.com/jhunethan01/react_crm
 
