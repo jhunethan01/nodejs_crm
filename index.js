@@ -37,16 +37,10 @@ app.get('/', (req, res) => {
 
 app.get("/customers", async (req, res) => {
     try {
-        const data = await pool.query(
-            `SELECT *  from customers;`
-        );
-        res.status(202).json({
-            customers: data.rows,
-        });
+        const data = await pool.query(`SELECT * from customers;`);
+        res.status(202).json({ customers: data.rows });
     } catch (err) {
-        res.status(500).json({
-            message: err,
-        });
+        res.status(500).json({ message: err.message });
     }
 });
 
