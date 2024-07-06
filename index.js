@@ -8,16 +8,15 @@ app.use(cors());
 
 require('dotenv').config();
 
-const mysql = require('mysql2');
+const { Pool } = require('pg');
 
-// connecting Database
-const connection = mysql.createPool({
+const pool = new Pool({
     user: process.env.POSTGRES_USER,
     host: process.env.POSTGRES_HOST,
     database: process.env.POSTGRES_DATABASE,
     password: process.env.POSTGRES_PASSWORD,
+    port: process.env.POSTGRES_PORT
 });
-
 
 app.get('/', (req, res) => {
     res.send(`
@@ -38,11 +37,11 @@ app.get('/', (req, res) => {
 
 app.get("/customers", async (req, res) => {
     try {
-        const data = await connection.promise().query(
+        const data = await pool.query(
             `SELECT *  from customers;`
         );
         res.status(202).json({
-            customers: data[0],
+            customers: data.rows,
         });
     } catch (err) {
         res.status(500).json({
@@ -54,9 +53,9 @@ app.get("/customers", async (req, res) => {
 app.post("/customers", async (req, res) => {
     try {
         const { first_name, last_name, email } = req.body;
-        const [{ insertId }] = await connection.promise().query(
+        const [{ insertId }] = await pool.query(
             `INSERT INTO customers (first_name, last_name, email) 
-            VALUES (?, ?,?)`,
+            VALUES ($1, $2, $3)`,
             [first_name, last_name, email]
         );
         res.status(202).json({
@@ -73,11 +72,11 @@ app.post("/customers", async (req, res) => {
 app.get("/customer/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        const data = await connection.promise().query(
-            `SELECT *  from customers where id = ?`, [id]
+        const data = await pool.query(
+            `SELECT *  from customers where id = $1`, [id]
         );
         res.status(200).json({
-            customer: data[0][0],
+            customer: data.rows[0],
         });
     } catch (err) {
         res.status(500).json({
@@ -90,10 +89,10 @@ app.patch("/customer/:id", async (req, res) => {
     try {
         const { id } = req.params;
         const { first_name, last_name, email, number_courses_completed } = req.body;
-        const update = await connection
-            .promise()
+        const update = await pool
+            
             .query(
-                `UPDATE customers set first_name = ?, last_name = ?, email = ?, number_courses_completed = ? where id = ?`,
+                `UPDATE customers set first_name = $1, last_name = $2, email = $3, number_courses_completed = $4 where id = $5`,
                 [first_name, last_name, email, number_courses_completed, id]
             );
         res.status(200).json({
@@ -109,10 +108,10 @@ app.patch("/customer/:id", async (req, res) => {
 app.delete("/customer/:id", async (req, res) => {
     try {
         const { id } = req.params;
-        const update = await connection
-            .promise()
+        const update = await pool
+            
             .query(
-                `DELETE FROM  customers where id = ?`,
+                `DELETE FROM  customers where id = $1`,
                 [id]
             );
         res.status(200).json({
@@ -134,9 +133,9 @@ app.get("/results", async (req, res) => {
             query += ` WHERE user_id = ${userId}`;
         }
 
-        const data = await connection.promise().query(query);
+        const data = await pool.query(query);
         res.status(202).json({
-            results: data[0],
+            results: data.rows,
         });
     } catch (err) {
         res.status(500).json({
@@ -148,9 +147,9 @@ app.get("/results", async (req, res) => {
 app.post("/results", async (req, res) => {
     try {
         const { user_id, course_id, score } = req.body;
-        const [{ insertId }] = await connection.promise().query(
+        const [{ insertId }] = await pool.query(
             `INSERT INTO results (user_id, course_id, score) 
-            VALUES (?, ?,?)`,
+            VALUES ($1, $2, $3)`,
             [user_id, course_id, score]
         );
         res.status(202).json({
@@ -166,10 +165,9 @@ app.post("/results", async (req, res) => {
 app.patch("/result", async (req, res) => {
     try {
         const { score, user_id, course_id, } = req.body;
-        const update = await connection
-            .promise()
+        const update = await pool
             .query(
-                `UPDATE results set score = ? where user_id = ? AND course_id = ?`,
+                `UPDATE results set score = $1 where user_id = $2 AND course_id = $3`,
                 [score, user_id, course_id]
             );
         res.status(200).json({
@@ -185,10 +183,10 @@ app.patch("/result", async (req, res) => {
 app.delete("/result", async (req, res) => {
     try {
         const { course_id, user_id } = req.body;
-        const update = await connection
-            .promise()
+        const update = await pool
+            
             .query(
-                `DELETE FROM  results where course_id = ? AND user_id = ?`,
+                `DELETE FROM  results where course_id = $1 AND user_id = $2`,
                 [course_id, user_id]
             );
         res.status(200).json({
